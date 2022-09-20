@@ -66,26 +66,33 @@ WHERE country = 'Canada')));
 SELECT film_id
 	FROM sakila.film_actor
 	WHERE actor_id IN(SELECT actor_id
-		FROM (SELECT actor_id, COUNT(actor_id) AS 'Count films'
+		FROM (SELECT actor_id, COUNT(film_id) AS 'Count films'
 			FROM sakila.film_actor
 			GROUP BY actor_id
-			ORDER BY actor_id DESC
+			ORDER BY COUNT(film_id) DESC
             LIMIT 1) sub1
 		);
             
 -- 7. Films rented by most profitable customer. You can use the customer table and payment table to find the most profitable customer ie the customer that has made the largest sum of payments
 
-SELECT film_id, title
-FROM sakila.film
-WHERE film_id IN (
-SELECT inventory_id 
-FROM sakila.rental
-WHERE customer_id IN (
-SELECT customer_id FROM (SELECT customer_id, SUM(amount) 
+SELECT customer_id
 FROM sakila.payment
 GROUP BY customer_id
 ORDER BY SUM(amount) DESC
-LIMIT 1) sub1));
+LIMIT 1; -- most profitable customer
+
+SELECT * FROM sakila.rental
+WHERE customer_id = 526; -- rentals from most profitable customer
+
+
+SELECT film_id as 'Movie id'
+FROM sakila.inventory
+LEFT JOIN sakila.rental USING (inventory_id)
+WHERE customer_id = (SELECT customer_id
+FROM sakila.payment
+GROUP BY customer_id
+ORDER BY SUM(amount) DESC
+LIMIT 1);
 
 -- 8. Customers who spent more than the average payments.
 
